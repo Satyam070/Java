@@ -12,6 +12,17 @@ public class ChatClient {
              BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in))) {
 
             System.out.println("✅ Connected to Chat Server!");
+            
+            // Read welcome message first
+            String serverResponse = input.readLine();  
+            System.out.println(serverResponse);
+            
+            // Enter username
+            System.out.print("📝 Enter your username: ");
+            String username = userInput.readLine();
+            output.println(username);  // Send username to server
+
+            // Thread to read messages from server
             new Thread(() -> {
                 try {
                     String serverMessage;
@@ -23,6 +34,7 @@ public class ChatClient {
                 }
             }).start();
 
+            // Read user input and send messages
             String message;
             while ((message = userInput.readLine()) != null) {
                 output.println(message);

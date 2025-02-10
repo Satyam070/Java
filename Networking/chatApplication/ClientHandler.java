@@ -6,6 +6,7 @@ public class ClientHandler implements Runnable {
     private Socket clientSocket;
     private PrintWriter out;
     private BufferedReader in;
+    private String username;
     private static Set<ClientHandler> clientHandlers;
 
     public ClientHandler(Socket socket, Set<ClientHandler> handlers) {
@@ -22,15 +23,20 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            out.println("📢 Welcome to the Chat! Type 'exit' to leave.");
-            String message;
+            out.println("📝 Enter your username:");
+            while (username == null || username.trim().isEmpty()) {  
+                username = in.readLine();  // Read username until it's valid
+            }
+            
+            System.out.println("👤 " + username + " has joined the chat!");
+            broadcastMessage("📢 " + username + " has joined the chat!", null);
 
+            String message;
             while ((message = in.readLine()) != null) {
                 if (message.equalsIgnoreCase("exit")) {
                     break;
                 }
-                System.out.println("📩 Message received: " + message);
-                broadcastMessage(message);
+                broadcastMessage(username + ": " + message, this);
             }
 
             closeConnection();
@@ -39,10 +45,10 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void broadcastMessage(String message) {
+    private void broadcastMessage(String message, ClientHandler sender) {
         for (ClientHandler client : clientHandlers) {
-            if (client != this) {
-                client.out.println("👤 " + message);
+            if (client != sender) {
+                client.out.println(message);
             }
         }
     }
@@ -51,7 +57,8 @@ public class ClientHandler implements Runnable {
         try {
             clientHandlers.remove(this);
             clientSocket.close();
-            System.out.println("❌ Client disconnected.");
+            System.out.println("❌ " + username + " has left the chat.");
+            broadcastMessage("📢 " + username + " has left the chat.", null);
         } catch (IOException e) {
             e.printStackTrace();
         }
